@@ -373,3 +373,29 @@
   - `docker compose run --rm app npm run db:check-types`
   - `openspec validate "design-points-transaction-system"`
   - `git diff --check`
+
+## 2026-06-10 20:57 CST - Concurrency, Nested Business Transactions, Recovery, and Reconciliation
+
+- Implemented Tasks 10, 11, and 12 from the development plan.
+- Added concurrency and atomicity coverage:
+  - Two concurrent reserve requests against one 100-point wallet produce one success and one `INSUFFICIENT_POINTS` failure.
+  - A reserve performed inside an outer transaction rolls back wallet, transaction, ledger, and outbox writes when the outer transaction fails.
+- Added business nested transaction handling:
+  - Child reservations store `parent_transaction_id`.
+  - `failParentTransaction` locks the parent, releases still-`RESERVED` children through `releaseReservation`, and marks the parent `FAILED`.
+  - Already `CAPTURED` children are not released.
+  - Repeated parent failure handling is idempotent.
+- Added recovery and reconciliation services:
+  - `releaseExpiredReservations` locks expired `RESERVED` transactions and releases them.
+  - Already terminal reservations are ignored by recovery.
+  - `reconcileWallet` compares wallet projection balances against ledger-derived balances and reports drift.
+- Verification completed:
+  - `docker compose run --rm app npm test -- test/modules/point-service.concurrency.test.ts`
+  - `docker compose run --rm app npm test -- test/modules/parent-transaction.test.ts`
+  - `docker compose run --rm app npm test -- test/modules/recovery.test.ts test/modules/reconciliation.test.ts`
+  - `npm run typecheck`
+  - `npm run build`
+  - `docker compose run --rm app npm test`
+  - `docker compose run --rm app npm run db:check-types`
+  - `openspec validate "design-points-transaction-system"`
+  - `git diff --check`

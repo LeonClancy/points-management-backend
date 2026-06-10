@@ -73,6 +73,39 @@ export async function findTransactionForUpdate(db: DbExecutor, id: string) {
     .executeTakeFirst();
 }
 
+export async function findReservedChildTransactionsForUpdate(
+  db: DbExecutor,
+  parentTransactionId: string
+) {
+  return db
+    .selectFrom('point_transactions')
+    .selectAll()
+    .where('parent_transaction_id', '=', parentTransactionId)
+    .where('status', '=', 'RESERVED')
+    .orderBy('created_at', 'asc')
+    .orderBy('id', 'asc')
+    .forUpdate()
+    .execute();
+}
+
+export async function findExpiredReservedTransactionsForUpdate(
+  db: DbExecutor,
+  now: Date,
+  limit = 100
+) {
+  return db
+    .selectFrom('point_transactions')
+    .selectAll()
+    .where('status', '=', 'RESERVED')
+    .where('expires_at', 'is not', null)
+    .where('expires_at', '<', now)
+    .orderBy('expires_at', 'asc')
+    .orderBy('id', 'asc')
+    .limit(limit)
+    .forUpdate()
+    .execute();
+}
+
 export async function updateTransactionStatus(
   db: DbExecutor,
   input: UpdateTransactionStatusInput
