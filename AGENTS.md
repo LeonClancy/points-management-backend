@@ -48,6 +48,7 @@ openspec validate "design-points-transaction-system"
 openspec status --change "design-points-transaction-system"
 npm run typecheck
 npm test
+docker compose run --rm app npm test
 npm run build
 docker compose run --rm app npm run db:migrate
 docker compose run --rm app npm run db:generate-types

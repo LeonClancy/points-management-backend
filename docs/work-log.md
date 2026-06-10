@@ -250,3 +250,37 @@
   - `docker compose build --no-cache app` repaired a stale Docker snapshot cache issue.
   - `docker compose up -d --build`
   - `curl -sS http://127.0.0.1:3000/health` returned `{"status":"ok"}` from the published app port.
+
+## 2026-06-10 19:04 CST - Nested Transaction Design Boundary
+
+- Revisited the assignment's nested transaction requirement before implementing transaction helpers.
+- Confirmed the design should keep two levels separate:
+  - Database-level nested transactions use PostgreSQL `SAVEPOINT` for short-lived nested service calls inside an existing database transaction.
+  - Business-level nested transactions use `point_transactions.parent_transaction_id` plus reserve/capture/release semantics for parent-child workflows that may span requests or workers.
+- Updated OpenSpec design notes to record implementation order:
+  - Task 5 implements database transaction/savepoint helpers only.
+  - Later business workflow work implements parent-child transaction failure propagation and idempotent child release.
+- Reaffirmed that database transactions must not remain open while the external action itself runs.
+
+## 2026-06-10 19:24 CST - Transaction Helper and Savepoint Tests
+
+- Implemented Task 5 from the development plan.
+- Followed TDD:
+  - Added `test/db/transaction.test.ts` first.
+  - Confirmed the test failed because `src/db/transaction.ts` did not exist.
+  - Added `withTransaction` and `withSavepoint`.
+- `withTransaction` now accepts either a root `Kysely<DB>` instance or an existing `Transaction<DB>`:
+  - Root DB input starts a PostgreSQL transaction.
+  - Existing transaction input creates a generated savepoint and rolls back to it on inner failure.
+- Added Docker-backed integration coverage for:
+  - outer transaction commit
+  - outer transaction rollback
+  - failed nested transaction rollback to savepoint while retaining outer writes
+  - successful nested writes rolling back when the outer transaction later fails
+- Verification completed:
+  - `docker compose run --rm app npm test -- test/db/transaction.test.ts`
+  - `npm run typecheck`
+  - `npm test`
+  - `npm run build`
+  - `docker compose run --rm app npm test`
+  - `openspec validate "design-points-transaction-system"`

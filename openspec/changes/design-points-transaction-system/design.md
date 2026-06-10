@@ -71,6 +71,13 @@ There are two meanings of nested transaction in this design:
 
 This distinction is important because database nested transactions are short-lived execution boundaries, while business nested transactions describe a multi-step workflow that may outlive one database transaction.
 
+Implementation order should preserve that distinction:
+
+1. Implement the database-level transaction helper first. A top-level call starts a PostgreSQL transaction; a nested call inside an existing transaction creates a generated `SAVEPOINT`. If the inner callback fails, only the inner writes roll back to the savepoint. If the outer callback fails later, PostgreSQL rolls back both outer and previously successful inner writes.
+2. Implement business-level nesting separately. Parent-child point transactions use `point_transactions.parent_transaction_id` and the reserve/capture/release lifecycle. Parent workflow failure releases still-`RESERVED` children idempotently, but it does not try to undo already-`CAPTURED` children through database rollback.
+
+The transaction helper must not be used to keep a database transaction open while an external action runs. It only protects short database mutation units such as wallet updates, transaction state changes, ledger writes, and outbox writes.
+
 ### Use outbox events for production side effects
 
 Any event that must be published after a point movement, such as `points.reserved` or `points.captured`, is written to `outbox_events` in the same database transaction. A worker publishes events after commit. This prevents publishing an event for a transaction that later rolls back.
