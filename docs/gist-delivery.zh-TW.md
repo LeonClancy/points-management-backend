@@ -1,6 +1,6 @@
 # Points Management Backend 交付說明
 
-這份 Gist 用來交付點數管理後端作業。完整程式碼已放在 GitHub repository，這裡整理專案重點、已完成範圍、驗證方式與建議閱讀順序。
+這份文件記錄 Gist 交付方式。實際建立 Gist 時，建議使用 `docs/gist/README.md` 當作 Gist 入口，因為它使用 GitHub repository 的絕對連結，不會因為 Gist 裡沒有 `docs/` 目錄而讓 Markdown 相對連結失效。
 
 ## Repository
 
@@ -94,14 +94,26 @@ http://127.0.0.1:3000/docs
 4. `docs/work-log.md`
    - 看這個專案從需求拆解、OpenSpec、技術選型到實作驗證的過程。
 
-## Gist 建議附件
+## Gist 建議內容
 
-如果要用 Gist 交付，我會放這幾份：
+建議只上傳這份交付入口：
 
-- `README.md`
-- `docs/architecture.md`
-- `docs/verification.zh-TW.md`
-- `docs/work-log.md`
-- 這份 `docs/gist-delivery.zh-TW.md`
+- `docs/gist/README.md`
+
+建立指令：
+
+```bash
+gh gist create docs/gist/README.md -d "Points Management Backend delivery"
+```
+
+這樣 Gist 裡的入口檔會直接提供：
+
+- repository URL
+- delivery commit URL
+- branch URL
+- README、架構文件、驗證文件、work-log 的 GitHub 絕對連結
+- Docker 驗證指令
+
+不建議直接把 repo 內的 `README.md`、`docs/architecture.md`、`docs/verification.zh-TW.md` 和 `docs/work-log.md` 原封不動丟到 Gist，因為這些文件裡的相對連結在 Gist 環境不一定能正確指回 repository。
 
 Gist 建議建立為 `secret gist`。GitHub 的 secret gist 不是權限型 private，只是未列出；知道 URL 的人仍然可以讀取。
