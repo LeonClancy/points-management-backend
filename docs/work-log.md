@@ -306,3 +306,22 @@
   - `docker compose run --rm app npm test`
   - `docker compose run --rm app npm run db:check-types`
   - `openspec validate "design-points-transaction-system"`
+
+## 2026-06-10 20:09 CST - Idempotency Payload Hashing
+
+- Implemented Task 7 from the development plan.
+- Clarified the requirement purpose before implementation:
+  - Idempotency keys prevent retrying the same recharge, reserve, capture, or release from creating duplicate wallet/ledger effects.
+  - Request hashes detect accidental reuse of the same idempotency key with a different payload.
+- Followed TDD:
+  - Added `test/modules/idempotency.test.ts` first.
+  - Confirmed it failed because `src/modules/points/idempotency.ts` did not exist.
+  - Added deterministic JSON serialization, SHA-256 payload hashing, and request hash conflict assertion.
+- Verification completed:
+  - `npm test -- test/modules/idempotency.test.ts`
+  - `npm run typecheck`
+  - `npm test`
+  - `npm run build`
+  - `docker compose run --rm app npm test`
+  - `docker compose run --rm app npm run db:check-types`
+  - `openspec validate "design-points-transaction-system"`
