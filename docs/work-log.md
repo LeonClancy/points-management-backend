@@ -69,3 +69,35 @@
 - Decided not to add a placeholder `docker-compose.yml` while the repository has no runnable backend service.
 - Added `AGENTS.md` so a future AI agent or engineer can immediately understand the project state, current OpenSpec change, validation commands, and design direction.
 - Added OpenSpec capability `project-operability` to track Docker Compose expectations and AI/engineer handoff documentation as explicit requirements.
+
+## 2026-06-10 16:49 CST - Backend Stack and Type Strategy
+
+- Discussed moving the design toward a concrete backend stack:
+  - Node.js with Fastify.
+  - PostgreSQL as the primary database.
+  - Swagger/OpenAPI docs generated from route schemas.
+  - Docker Compose as the expected local setup path once runnable code exists.
+- Selected `Kysely + pg` for database access instead of raw `pg` only:
+  - Keeps SQL explicit enough for row locks, savepoints, state transitions, and ledger writes.
+  - Provides stronger TypeScript inference for table names, columns, selects, inserts, and updates.
+  - Avoids ORM behavior that could hide transaction and locking details that are important for this assignment.
+- Chose TypeBox for Fastify request/response schemas:
+  - Fastify validation and serialization are JSON Schema-based.
+  - `@fastify/swagger` can generate API docs from route schemas.
+  - `@fastify/type-provider-typebox` gives typed request and response handling without adding a second schema language.
+- Surveyed Zod and decided not to use it for the main API schema layer:
+  - Zod is viable, and Zod v4 supports JSON Schema conversion.
+  - The Fastify Zod type provider is third-party and requires validator, serializer, and Swagger transform setup.
+  - Some Zod constructs are not cleanly representable as JSON Schema, which can complicate OpenAPI generation.
+  - For this project, TypeBox is simpler because the API contract is JSON-oriented and should be documentation-friendly.
+- Reviewed `kysely-codegen` side effects and repository policy:
+  - `kysely-codegen` introspects a live database schema and writes generated TypeScript database types.
+  - Codegen requires the database and migrations to be available, so generated types should not be the only way to typecheck the project.
+  - The generated DB type file should be committed to git, not ignored, because the project has an explicit handoff and easy-setup requirement.
+  - Schema migrations and generated types must be updated together.
+  - CI should run `kysely-codegen --verify` to detect drift between migrations/database schema and committed generated types.
+- Tentative codegen convention:
+  - Store generated types at `src/db/generated.ts` or `src/db/generated.d.ts`.
+  - Commit `.kysely-codegenrc.json`.
+  - Do not manually edit the generated type file.
+  - Keep `.env`, local database data, and build artifacts ignored.
