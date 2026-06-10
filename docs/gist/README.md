@@ -85,13 +85,3 @@ http://127.0.0.1:3000/docs
 完整手動 API smoke flow 請看：
 
 https://github.com/LeonClancy/points-management-backend/blob/main/docs/verification.zh-TW.md
-
-## Gist 建立指令
-
-建議只上傳這個交付入口檔，並在 Gist 裡命名成 `README.md`：
-
-```bash
-gh gist create docs/gist/README.md -d "Points Management Backend delivery"
-```
-
-`gh gist create` 預設建立 secret gist，不加 `--public` 就不會公開列出。GitHub 的 secret gist 不是權限型 private，只是未列出；知道 URL 的人仍然可以讀取。
