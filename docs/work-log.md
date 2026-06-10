@@ -181,3 +181,19 @@
   - `npm run build`
   - `npm test`
   - `openspec validate "design-points-transaction-system"`
+
+## 2026-06-10 17:29 CST - Configuration Review Fixes
+
+- Addressed code review feedback for Task 3:
+  - Fastify validation errors now return `400 VALIDATION_ERROR` instead of being hidden as `500 INTERNAL_SERVER_ERROR`.
+  - `loadEnv` now rejects invalid `NODE_ENV` and invalid `LOG_LEVEL` values.
+  - `src/server.ts` now parses environment config before constructing the Fastify app.
+  - `buildApp` now receives the logger level explicitly instead of reading raw `process.env.LOG_LEVEL`.
+- Added regression tests for invalid env values, Fastify validation errors, and explicit app logger configuration.
+- Verification completed:
+  - `npm test -- test/config/env.test.ts test/plugins/error-handler.test.ts test/app.test.ts`
+  - `npm run typecheck`
+  - `npm test`
+  - `npm run build`
+  - `openspec validate "design-points-transaction-system"`
+  - `git diff --check`

@@ -1,11 +1,16 @@
 import Fastify from 'fastify';
 import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
+import type { LogLevel } from './config/env.js';
 import { errorHandlerPlugin } from './plugins/error-handler.js';
 
-export async function buildApp() {
+export type BuildAppOptions = {
+  loggerLevel?: LogLevel;
+};
+
+export async function buildApp(options: BuildAppOptions = {}) {
   const app = Fastify({
     logger: {
-      level: process.env.LOG_LEVEL ?? 'info'
+      level: options.loggerLevel ?? 'info'
     }
   }).withTypeProvider<TypeBoxTypeProvider>();
 

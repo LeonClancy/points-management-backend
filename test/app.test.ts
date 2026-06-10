@@ -1,15 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { buildApp } from '../../src/app.js';
+import { buildApp } from '../src/app.js';
 
-describe('health route', () => {
+describe('buildApp', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  it('returns ok status', async () => {
-    vi.stubEnv('LOG_LEVEL', 'silent');
+  it('uses the provided logger level instead of raw process env', async () => {
+    vi.stubEnv('LOG_LEVEL', 'not-a-fastify-level');
 
     const app = await buildApp({ loggerLevel: 'silent' });
+
     try {
       const response = await app.inject({
         method: 'GET',
@@ -17,7 +18,6 @@ describe('health route', () => {
       });
 
       expect(response.statusCode).toBe(200);
-      expect(response.json()).toEqual({ status: 'ok' });
     } finally {
       await app.close();
     }

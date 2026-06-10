@@ -1,9 +1,8 @@
 import { buildApp } from './app.js';
 import { loadEnv } from './config/env.js';
 
-const app = await buildApp();
-
 const env = loadEnv();
+const app = await buildApp({ loggerLevel: env.LOG_LEVEL });
 
 try {
   await app.listen({ host: env.HOST, port: env.PORT });

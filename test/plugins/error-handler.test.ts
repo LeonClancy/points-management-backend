@@ -55,4 +55,44 @@ describe('errorHandlerPlugin', () => {
       await app.close();
     }
   });
+
+  it('serializes Fastify validation errors as client errors', async () => {
+    vi.stubEnv('LOG_LEVEL', 'silent');
+    const app = Fastify({ logger: { level: 'silent' } });
+
+    await app.register(errorHandlerPlugin);
+    app.post(
+      '/body',
+      {
+        schema: {
+          body: {
+            type: 'object',
+            required: ['name'],
+            properties: {
+              name: { type: 'string' }
+            }
+          }
+        }
+      },
+      async () => ({ ok: true })
+    );
+
+    try {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/body',
+        payload: {}
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toMatchObject({
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Request validation failed'
+        }
+      });
+    } finally {
+      await app.close();
+    }
+  });
 });
