@@ -325,3 +325,27 @@
   - `docker compose run --rm app npm test`
   - `docker compose run --rm app npm run db:check-types`
   - `openspec validate "design-points-transaction-system"`
+
+## 2026-06-10 20:23 CST - Idempotent Recharge Service
+
+- Implemented Task 8 from the development plan.
+- Followed TDD:
+  - Added `test/modules/point-service.recharge.test.ts` first.
+  - Confirmed it failed because `src/modules/points/point.service.ts` did not exist.
+  - Added `rechargePoints` service orchestration.
+- Recharge service behavior:
+  - Rejects non-positive or non-integer recharge amounts with `INVALID_RECHARGE_AMOUNT`.
+  - Uses an idempotency scope per recharge operation and user.
+  - Hashes the recharge request payload to reject key reuse with different amounts.
+  - Creates a wallet on first recharge, locks the wallet before mutation, updates `available_points`, appends a recharge ledger entry, appends a `points.recharged` outbox event, and stores the response payload on the point transaction.
+  - Returns the stored response for identical idempotent retries without changing wallet balances or adding duplicate ledger/outbox rows.
+- Found that full Docker test runs were flaky once multiple DB integration suites existed because Vitest runs test files in parallel by default while the suites share one PostgreSQL schema and truncate tables in `beforeEach`.
+- Updated `npm test` and `npm run test:watch` to use `--no-file-parallelism` so DB-backed test files run sequentially.
+- Verification completed:
+  - `docker compose run --rm app npm test -- test/modules/point-service.recharge.test.ts`
+  - `npm run typecheck`
+  - `npm run build`
+  - `docker compose run --rm app npm test`
+  - `docker compose run --rm app npm run db:check-types`
+  - `openspec validate "design-points-transaction-system"`
+  - `git diff --check`
