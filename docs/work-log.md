@@ -165,3 +165,19 @@
   - Added `.dockerignore` to keep `.git`, `.env`, `node_modules`, `dist`, local database data, docs, and OpenSpec files out of Docker build context.
   - Updated the health route test to close the Fastify instance after injection.
   - Split README local setup into Docker and host Node.js paths so Docker remains a true one-command startup path after copying `.env.example`.
+
+## 2026-06-10 17:21 CST - Configuration and Error Handling
+
+- Implemented Task 3 from the development plan.
+- Followed TDD:
+  - Added `test/config/env.test.ts` and `test/plugins/error-handler.test.ts` first.
+  - Confirmed they failed because `src/config/env.ts` and `src/plugins/error-handler.ts` did not exist.
+  - Added the minimal env loader, shared application error classes, and Fastify error handler plugin.
+- Integrated the error handler plugin into `buildApp`.
+- Updated `src/server.ts` to read host and port from `loadEnv`.
+- Verification completed:
+  - `npm test -- test/config/env.test.ts test/plugins/error-handler.test.ts`
+  - `npm run typecheck`
+  - `npm run build`
+  - `npm test`
+  - `openspec validate "design-points-transaction-system"`
