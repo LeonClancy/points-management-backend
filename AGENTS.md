@@ -4,7 +4,7 @@
 
 This repository is a backend engineering assignment for a transactional point management system. The assignment asks for recharge, fixed 100-point action cost, successful deduction, failure refund, nested transactions, consistency, and production readiness.
 
-Implementation is in progress. The current source of truth is the OpenSpec change, supporting docs, and the Fastify application scaffold.
+Implementation is complete for the runnable backend in this repository. The current source of truth is the OpenSpec change, `docs/architecture.md`, `docs/work-log.md`, and the Fastify/PostgreSQL code.
 
 ## Required First Step
 
@@ -19,6 +19,7 @@ Then follow any applicable skill instructions before changing files.
 ## Key Files
 
 - `docs/context.md`: Original assignment prompt.
+- `docs/architecture.md`: Final architecture and handoff document.
 - `docs/work-log.md`: Work log for AI-assisted analysis and manual design decisions.
 - `docs/plans/2026-06-10-points-management-backend-implementation.md`: Current implementation plan.
 - `package.json`: Node.js scripts and dependencies.
@@ -26,6 +27,10 @@ Then follow any applicable skill instructions before changing files.
 - `src/server.ts`: HTTP server entrypoint.
 - `src/db/migrations/`: Kysely migrations for PostgreSQL schema.
 - `src/db/generated.ts`: Kysely DB types. Regenerate with `npm run db:generate-types` inside Docker after migration changes.
+- `src/modules/points/point.service.ts`: Recharge, reserve, capture, and release service logic.
+- `src/modules/points/parent-transaction.service.ts`: Business parent failure handling.
+- `src/modules/points/recovery.service.ts`: Expired reservation recovery.
+- `src/modules/points/reconciliation.service.ts`: Wallet projection vs ledger reconciliation.
 - `docker-compose.yml`: Local app and PostgreSQL startup.
 - `openspec/config.yaml`: OpenSpec configuration.
 - `openspec/changes/design-points-transaction-system/proposal.md`: Change motivation and capability list.
@@ -45,9 +50,7 @@ Validate it with:
 
 ```bash
 openspec validate "design-points-transaction-system"
-openspec status --change "design-points-transaction-system"
 npm run typecheck
-npm test
 docker compose run --rm app npm test
 npm run build
 docker compose run --rm app npm run db:migrate
@@ -69,24 +72,40 @@ The selected point-system design uses:
 - Parent-child point transactions for business-level nested workflows.
 - Outbox events for side effects after commit.
 
+## API Surface
+
+- `GET /health`
+- `POST /wallets/recharge`
+- `GET /wallets/:user_id`
+- `POST /actions/reserve`
+- `POST /actions/:transaction_id/capture`
+- `POST /actions/:transaction_id/release`
+- `/docs` for Swagger UI
+
 ## Operability Requirement
 
 Ease of setup is now a non-functional requirement.
 
-The repository has a minimal runnable Fastify scaffold and Docker Compose support. Start the app and PostgreSQL with:
+Start the app and PostgreSQL with:
 
 ```bash
+cp .env.example .env
 docker compose up --build
 ```
 
-The Compose setup should include:
+Run setup and verification commands through Docker:
 
-- Application service.
-- PostgreSQL service.
-- Required environment variables or `.env.example`.
-- Migration/setup command.
-- Health checks where practical.
-- Clear shutdown/reset instructions.
+```bash
+docker compose run --rm app npm run db:migrate
+docker compose run --rm app npm run db:check-types
+docker compose run --rm app npm test
+```
+
+Reset all local data:
+
+```bash
+docker compose down -v
+```
 
 ## Editing Guidance
 

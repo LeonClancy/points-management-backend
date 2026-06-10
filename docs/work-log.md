@@ -427,3 +427,32 @@
   - `docker compose run --rm app npm run db:check-types`
   - `openspec validate "design-points-transaction-system"`
   - `git diff --check`
+
+## 2026-06-10 21:06 CST - Final Documentation and Reset Verification
+
+- Implemented Tasks 14 and 15 from the development plan.
+- Added `docs/architecture.md` covering:
+  - problem understanding
+  - technology choices
+  - data model
+  - recharge/reserve/capture/release flows
+  - consistency and idempotency
+  - database-level savepoints and business-level parent-child transactions
+  - recovery, reconciliation, outbox, production readiness, and local setup
+- Updated `AGENTS.md` and `README.md` with current API surface, setup, Docker, and verification commands.
+- Updated OpenSpec task status for completed repo-local tasks. The Private Gist delivery item remains unchecked because it is an external publishing step.
+- Final reset verification completed from a clean Compose volume:
+  - `docker compose down -v`
+  - `docker compose up -d --build`
+  - `curl -sS http://127.0.0.1:3000/health`
+  - `docker compose run --rm app npm run db:migrate`
+  - `docker compose run --rm app npm run db:check-types`
+  - `docker compose run --rm app npm test`
+  - `npm run typecheck`
+  - `npm run build`
+  - `openspec validate "design-points-transaction-system"`
+- Manual smoke flow completed:
+  - `POST /wallets/recharge` returned `RECHARGED`.
+  - Retrying the same recharge returned the same transaction id.
+  - `POST /actions/reserve` returned `RESERVED`.
+  - Retrying the same reserve returned the same transaction id without another deduction.
