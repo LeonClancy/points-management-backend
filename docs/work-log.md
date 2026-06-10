@@ -456,3 +456,9 @@
   - Retrying the same recharge returned the same transaction id.
   - `POST /actions/reserve` returned `RESERVED`.
   - Retrying the same reserve returned the same transaction id without another deduction.
+
+## 2026-06-10 21:16 CST - Chinese README and Verification Guide
+
+- Expanded `README.md` with a Chinese project overview describing the point management system features.
+- Added `docs/verification.zh-TW.md` as a standalone Traditional Chinese manual verification guide.
+- The verification guide covers clean Docker startup, migration, health check, Swagger, automated tests, recharge/reserve retry checks, capture/release checks, idempotency conflict checks, and common troubleshooting steps.
