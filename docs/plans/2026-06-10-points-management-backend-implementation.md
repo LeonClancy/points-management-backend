@@ -23,7 +23,7 @@
 ## Implementation Notes
 
 - Keep generated database types committed to git at `src/db/generated.ts`.
-- Do not manually edit `src/db/generated.ts`; regenerate it after migrations change.
+- Normally do not manually edit `src/db/generated.ts`; regenerate it after migrations change. The Docker-deferred bootstrap may keep a temporary hand-aligned file, but it must be regenerated and checked inside Docker once Docker is available.
 - Use snake_case database columns to match PostgreSQL and reduce mapping ambiguity.
 - Use `integer` for point values in this assignment. If product requirements later exceed 2,147,483,647 points per wallet, migrate to `bigint` with explicit `pg` parser/type policy.
 - Use explicit service methods for state transitions: `rechargePoints`, `reserveActionPoints`, `captureReservation`, `releaseReservation`, `releaseExpiredReservations`.
@@ -479,7 +479,7 @@ git commit -m "chore: add config and error handling"
 - Create: `src/db/migrate.ts`
 - Create: `src/db/migrations/202606100001_initial_schema.ts`
 - Create after codegen: `src/db/generated.ts`
-- Test: `test/db/migration.test.ts`
+- Test: `test/db/db-scaffold.test.ts`
 
 **Step 1: Create codegen config**
 
@@ -529,6 +529,50 @@ import { Kysely, sql } from 'kysely';
 
 export async function up(db: Kysely<unknown>): Promise<void> {
   await sql`create extension if not exists "pgcrypto"`.execute(db);
+  await sql`
+    do $$
+    begin
+      create type point_operation as enum ('RECHARGE', 'ACTION');
+    exception
+      when duplicate_object then null;
+    end $$;
+  `.execute(db);
+  await sql`
+    do $$
+    begin
+      create type point_transaction_status as enum (
+        'RECHARGED',
+        'RESERVED',
+        'CAPTURED',
+        'RELEASED',
+        'FAILED'
+      );
+    exception
+      when duplicate_object then null;
+    end $$;
+  `.execute(db);
+  await sql`
+    do $$
+    begin
+      create type ledger_entry_type as enum (
+        'RECHARGE',
+        'RESERVE',
+        'CAPTURE',
+        'RELEASE',
+        'ADJUSTMENT'
+      );
+    exception
+      when duplicate_object then null;
+    end $$;
+  `.execute(db);
+  await sql`
+    do $$
+    begin
+      create type outbox_status as enum ('PENDING', 'PUBLISHED', 'FAILED');
+    exception
+      when duplicate_object then null;
+    end $$;
+  `.execute(db);
 
   await db.schema
     .createTable('wallets')
@@ -550,8 +594,8 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('parent_transaction_id', 'uuid', (col) =>
       col.references('point_transactions.id')
     )
-    .addColumn('operation', 'text', (col) => col.notNull())
-    .addColumn('status', 'text', (col) => col.notNull())
+    .addColumn('operation', sql`point_operation`, (col) => col.notNull())
+    .addColumn('status', sql`point_transaction_status`, (col) => col.notNull())
     .addColumn('amount', 'integer', (col) => col.notNull())
     .addColumn('idempotency_scope', 'text', (col) => col.notNull())
     .addColumn('idempotency_key', 'text', (col) => col.notNull())
@@ -561,14 +605,6 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`now()`))
     .addColumn('updated_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`now()`))
     .addCheckConstraint('point_transactions_amount_positive', sql`amount > 0`)
-    .addCheckConstraint(
-      'point_transactions_operation_valid',
-      sql`operation in ('RECHARGE', 'ACTION')`
-    )
-    .addCheckConstraint(
-      'point_transactions_status_valid',
-      sql`status in ('RECHARGED', 'RESERVED', 'CAPTURED', 'RELEASED', 'FAILED')`
-    )
     .execute();
 
   await db.schema
@@ -585,20 +621,31 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .execute();
 
   await db.schema
+    .createIndex('point_transactions_expired_reservations_idx')
+    .on('point_transactions')
+    .columns(['status', 'expires_at'])
+    .where('status', '=', 'RESERVED')
+    .where('expires_at', 'is not', null)
+    .execute();
+
+  await db.schema
+    .createIndex('point_transactions_parent_status_idx')
+    .on('point_transactions')
+    .columns(['parent_transaction_id', 'status'])
+    .where('parent_transaction_id', 'is not', null)
+    .execute();
+
+  await db.schema
     .createTable('point_ledger_entries')
     .addColumn('id', 'uuid', (col) => col.primaryKey().defaultTo(sql`gen_random_uuid()`))
     .addColumn('wallet_id', 'uuid', (col) => col.notNull().references('wallets.id'))
     .addColumn('transaction_id', 'uuid', (col) =>
       col.notNull().references('point_transactions.id')
     )
-    .addColumn('entry_type', 'text', (col) => col.notNull())
+    .addColumn('entry_type', sql`ledger_entry_type`, (col) => col.notNull())
     .addColumn('available_delta', 'integer', (col) => col.notNull().defaultTo(0))
     .addColumn('held_delta', 'integer', (col) => col.notNull().defaultTo(0))
     .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`now()`))
-    .addCheckConstraint(
-      'point_ledger_entries_type_valid',
-      sql`entry_type in ('RECHARGE', 'RESERVE', 'CAPTURE', 'RELEASE', 'ADJUSTMENT')`
-    )
     .execute();
 
   await db.schema
@@ -614,16 +661,21 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     .addColumn('aggregate_id', 'uuid', (col) => col.notNull())
     .addColumn('event_type', 'text', (col) => col.notNull())
     .addColumn('payload', 'jsonb', (col) => col.notNull())
-    .addColumn('status', 'text', (col) => col.notNull().defaultTo('PENDING'))
+    .addColumn('status', sql`outbox_status`, (col) =>
+      col.notNull().defaultTo(sql`'PENDING'::outbox_status`)
+    )
     .addColumn('attempts', 'integer', (col) => col.notNull().defaultTo(0))
     .addColumn('available_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`now()`))
     .addColumn('published_at', 'timestamptz')
     .addColumn('created_at', 'timestamptz', (col) => col.notNull().defaultTo(sql`now()`))
     .addCheckConstraint('outbox_events_attempts_non_negative', sql`attempts >= 0`)
-    .addCheckConstraint(
-      'outbox_events_status_valid',
-      sql`status in ('PENDING', 'PUBLISHED', 'FAILED')`
-    )
+    .execute();
+
+  await db.schema
+    .createIndex('outbox_events_available_idx')
+    .on('outbox_events')
+    .columns(['status', 'available_at'])
+    .where('status', '=', 'PENDING')
     .execute();
 }
 
@@ -632,6 +684,10 @@ export async function down(db: Kysely<unknown>): Promise<void> {
   await db.schema.dropTable('point_ledger_entries').ifExists().execute();
   await db.schema.dropTable('point_transactions').ifExists().execute();
   await db.schema.dropTable('wallets').ifExists().execute();
+  await sql`drop type if exists outbox_status`.execute(db);
+  await sql`drop type if exists ledger_entry_type`.execute(db);
+  await sql`drop type if exists point_transaction_status`.execute(db);
+  await sql`drop type if exists point_operation`.execute(db);
 }
 ```
 
@@ -643,15 +699,15 @@ Create `src/db/migrate.ts` using Kysely `Migrator` and `FileMigrationProvider`.
 
 Run: `docker compose up -d db`
 
-Run: `DATABASE_URL=postgres://points:points@localhost:5432/points npm run db:migrate`
+Run: `docker compose run --rm app npm run db:migrate`
 
-Run: `DATABASE_URL=postgres://points:points@localhost:5432/points npm run db:generate-types`
+Run: `docker compose run --rm app npm run db:generate-types`
 
 Expected: `src/db/generated.ts` is created.
 
 **Step 6: Verify generated types are current**
 
-Run: `DATABASE_URL=postgres://points:points@localhost:5432/points npm run db:check-types`
+Run: `docker compose run --rm app npm run db:check-types`
 
 Expected: command exits 0.
 
@@ -1215,8 +1271,9 @@ Update `AGENTS.md` with real commands:
 ```bash
 npm install
 docker compose up --build
-npm run db:migrate
-npm run db:generate-types
+docker compose run --rm app npm run db:migrate
+docker compose run --rm app npm run db:generate-types
+docker compose run --rm app npm run db:check-types
 npm test
 npm run build
 openspec validate "design-points-transaction-system"
@@ -1272,8 +1329,8 @@ Expected:
 In another shell, run:
 
 ```bash
-npm run db:migrate
-npm run db:check-types
+docker compose run --rm app npm run db:migrate
+docker compose run --rm app npm run db:check-types
 npm run build
 npm test
 openspec validate "design-points-transaction-system"

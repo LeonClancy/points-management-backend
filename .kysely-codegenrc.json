@@ -1,0 +1,12 @@
+{
+  "dialect": "postgres",
+  "outFile": "./src/db/generated.ts",
+  "url": "env(DATABASE_URL)",
+  "defaultSchemas": ["public"],
+  "excludePattern": "kysely_*",
+  "camelCase": false,
+  "numericParser": "string",
+  "dateParser": "timestamp",
+  "runtimeEnums": false,
+  "typeOnlyImports": true
+}

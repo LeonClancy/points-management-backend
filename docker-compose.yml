@@ -1,6 +1,8 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: dev
     environment:
       NODE_ENV: development
       HOST: 0.0.0.0
@@ -10,6 +12,9 @@ services:
       RESERVATION_TTL_SECONDS: 900
     ports:
       - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
     depends_on:
       db:
         condition: service_healthy

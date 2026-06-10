@@ -197,3 +197,39 @@
   - `npm run build`
   - `openspec validate "design-points-transaction-system"`
   - `git diff --check`
+
+## 2026-06-10 18:14 CST - Database Scaffold with Docker-only DB Verification
+
+- Continued Task 4 with the explicit constraint that database verification must run through Docker, not local `psql`, `postgres`, or `initdb`.
+- Confirmed Docker is still unavailable in the current WSL environment:
+  - `docker version` reports Docker Desktop WSL integration is not active.
+  - Direct Windows Docker binary invocation fails with a WSL vsock socket error.
+- Implemented database scaffold that can be statically verified without connecting to a local database:
+  - `.kysely-codegenrc.json`
+  - `src/db/database.ts`
+  - `src/db/migrate.ts`
+  - `src/db/migrations/202606100001_initial_schema.ts`
+  - `src/db/generated.ts`
+  - `test/db/db-scaffold.test.ts`
+- Added a temporary committed `src/db/generated.ts` matching the initial migration so the repository can typecheck before Docker is available.
+- Updated Docker setup so migration and codegen can run inside the Compose app container once Docker is available:
+  - `Dockerfile` now has a dev target with dev dependencies.
+  - `docker-compose.yml` uses the dev target and bind mounts the repository so generated types write back to the host.
+  - `README.md` and `AGENTS.md` document Docker-only DB migration/codegen commands.
+- Deferred runtime migration and `kysely-codegen --verify` validation until Docker is available.
+
+## 2026-06-10 18:21 CST - Database Scaffold Spec Review Fix
+
+- Addressed Task 4 spec review feedback:
+  - Updated `docs/plans/2026-06-10-points-management-backend-implementation.md` so migration, type generation, and type drift checks use `docker compose run --rm app ...` instead of host-side `DATABASE_URL=... npm run ...` or direct host `npm run db:*` commands.
+  - Kept the Docker-only DB verification constraint explicit for future agents.
+- Runtime migration and `kysely-codegen --verify` remain deferred until Docker is available in the local environment.
+
+## 2026-06-10 18:35 CST - Database Scaffold Code Review Fixes
+
+- Addressed Task 4 code quality review feedback:
+  - Replaced `text` plus check constraints with PostgreSQL enum types for point operation/status, ledger entry type, and outbox status so future `kysely-codegen` output can preserve string union types.
+  - Added indexes for expired reservation recovery, parent-child transaction lookup, and outbox polling.
+  - Updated the bootstrap `src/db/generated.ts` type aliases to align with PostgreSQL enum codegen naming.
+  - Updated the implementation plan to document the temporary Docker-deferred generated type exception and the actual DB scaffold test file name.
+- Added scaffold tests that catch enum/typegen drift and missing planned workflow indexes without requiring local PostgreSQL access.

@@ -24,6 +24,8 @@ Then follow any applicable skill instructions before changing files.
 - `package.json`: Node.js scripts and dependencies.
 - `src/app.ts`: Fastify app builder.
 - `src/server.ts`: HTTP server entrypoint.
+- `src/db/migrations/`: Kysely migrations for PostgreSQL schema.
+- `src/db/generated.ts`: Kysely DB types. Regenerate with `npm run db:generate-types` inside Docker after migration changes.
 - `docker-compose.yml`: Local app and PostgreSQL startup.
 - `openspec/config.yaml`: OpenSpec configuration.
 - `openspec/changes/design-points-transaction-system/proposal.md`: Change motivation and capability list.
@@ -47,6 +49,9 @@ openspec status --change "design-points-transaction-system"
 npm run typecheck
 npm test
 npm run build
+docker compose run --rm app npm run db:migrate
+docker compose run --rm app npm run db:generate-types
+docker compose run --rm app npm run db:check-types
 ```
 
 ## Design Direction
@@ -87,4 +92,5 @@ The Compose setup should include:
 - Keep the final deliverable Markdown-oriented unless implementation is explicitly requested.
 - Update `docs/work-log.md` when AI-assisted analysis or manual design decisions change.
 - Update OpenSpec specs/tasks when adding or changing requirements.
+- Run database migration/codegen commands through Docker Compose. Do not use local `psql`, `postgres`, or `initdb` as a shortcut.
 - Run OpenSpec validation before claiming the design artifacts are valid.
