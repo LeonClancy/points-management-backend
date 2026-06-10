@@ -2,9 +2,9 @@
 
 ## Project Overview
 
-This repository is currently a design-first submission for a backend engineering assignment. The assignment asks for a transactional point management system that supports recharge, fixed 100-point action cost, successful deduction, failure refund, nested transactions, consistency, and production readiness.
+This repository is a backend engineering assignment for a transactional point management system. The assignment asks for recharge, fixed 100-point action cost, successful deduction, failure refund, nested transactions, consistency, and production readiness.
 
-There is no runnable backend implementation yet. The current source of truth is the OpenSpec change and supporting docs.
+Implementation is in progress. The current source of truth is the OpenSpec change, supporting docs, and the Fastify application scaffold.
 
 ## Required First Step
 
@@ -20,6 +20,11 @@ Then follow any applicable skill instructions before changing files.
 
 - `docs/context.md`: Original assignment prompt.
 - `docs/work-log.md`: Work log for AI-assisted analysis and manual design decisions.
+- `docs/plans/2026-06-10-points-management-backend-implementation.md`: Current implementation plan.
+- `package.json`: Node.js scripts and dependencies.
+- `src/app.ts`: Fastify app builder.
+- `src/server.ts`: HTTP server entrypoint.
+- `docker-compose.yml`: Local app and PostgreSQL startup.
 - `openspec/config.yaml`: OpenSpec configuration.
 - `openspec/changes/design-points-transaction-system/proposal.md`: Change motivation and capability list.
 - `openspec/changes/design-points-transaction-system/design.md`: Technical design decisions.
@@ -59,13 +64,13 @@ The selected point-system design uses:
 
 Ease of setup is now a non-functional requirement.
 
-Because the repository is still design-only, do not add a fake `docker-compose.yml` that implies the service is runnable. When real backend code is introduced, add Docker Compose support in the same change so a developer can start the app and PostgreSQL with:
+The repository has a minimal runnable Fastify scaffold and Docker Compose support. Start the app and PostgreSQL with:
 
 ```bash
 docker compose up --build
 ```
 
-That future Compose setup should include:
+The Compose setup should include:
 
 - Application service.
 - PostgreSQL service.

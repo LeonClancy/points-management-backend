@@ -130,3 +130,30 @@
   - architecture documentation
   - final verification
 - Added a requirement coverage checklist mapping implementation tasks back to OpenSpec capabilities.
+
+## 2026-06-10 17:10 CST - Scaffold and Local Setup Implementation
+
+- Started implementation directly in the repository working tree so code changes are easy to review.
+- Implemented the first runnable Fastify scaffold:
+  - `package.json`
+  - `tsconfig.json`
+  - `.env.example`
+  - `.gitignore`
+  - `src/app.ts`
+  - `src/server.ts`
+  - `test/http/health.test.ts`
+- Followed TDD for the health route:
+  - Wrote `test/http/health.test.ts` first.
+  - Confirmed it failed because `src/app.ts` did not exist.
+  - Added the minimal Fastify app and verified the test passed.
+- Added Docker local setup in the same implementation batch to satisfy the operability requirement:
+  - `Dockerfile`
+  - `docker-compose.yml`
+  - `README.md`
+- Updated `AGENTS.md` to reflect that implementation is now in progress and the repository has a runnable Fastify scaffold.
+- Verification completed:
+  - `npm test`
+  - `npm run build`
+  - `openspec validate "design-points-transaction-system"`
+  - `git diff --check`
+- Docker Compose runtime verification could not run in this environment because the WSL distro does not have the `docker` command available.
