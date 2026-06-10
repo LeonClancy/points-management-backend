@@ -101,3 +101,32 @@
   - Commit `.kysely-codegenrc.json`.
   - Do not manually edit the generated type file.
   - Keep `.env`, local database data, and build artifacts ignored.
+
+## 2026-06-10 16:56 CST - Implementation Planning
+
+- Created a development plan from the accepted OpenSpec requirements at `docs/plans/2026-06-10-points-management-backend-implementation.md`.
+- Planned implementation around the confirmed stack:
+  - Node.js 22 LTS.
+  - Fastify 5.
+  - TypeBox route schemas.
+  - Kysely + pg.
+  - PostgreSQL.
+  - `kysely-codegen` with generated database types committed to git.
+  - Docker Compose for local setup.
+- Broke the implementation into task-sized phases:
+  - project scaffold
+  - Docker Compose setup
+  - configuration and errors
+  - database schema, migrations, and codegen
+  - transaction/savepoint helpers
+  - repositories
+  - idempotency
+  - recharge
+  - reserve/capture/release
+  - concurrency tests
+  - business nested transactions
+  - recovery and reconciliation
+  - API routes and Swagger docs
+  - architecture documentation
+  - final verification
+- Added a requirement coverage checklist mapping implementation tasks back to OpenSpec capabilities.
