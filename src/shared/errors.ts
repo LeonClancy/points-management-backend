@@ -15,6 +15,12 @@ export class ConflictError extends AppError {
   }
 }
 
+export class NotFoundError extends AppError {
+  constructor(message: string, code = 'NOT_FOUND', details?: unknown) {
+    super(message, 404, code, details);
+  }
+}
+
 export class ValidationAppError extends AppError {
   constructor(message: string, code = 'VALIDATION_ERROR', details?: unknown) {
     super(message, 400, code, details);

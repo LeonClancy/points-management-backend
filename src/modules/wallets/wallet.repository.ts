@@ -16,6 +16,15 @@ export async function findWalletByUserIdForUpdate(db: DbExecutor, userId: string
     .executeTakeFirst();
 }
 
+export async function findWalletByIdForUpdate(db: DbExecutor, walletId: string) {
+  return db
+    .selectFrom('wallets')
+    .selectAll()
+    .where('id', '=', walletId)
+    .forUpdate()
+    .executeTakeFirst();
+}
+
 export async function createWallet(db: DbExecutor, userId: string) {
   return db
     .insertInto('wallets')

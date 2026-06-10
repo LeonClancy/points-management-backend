@@ -349,3 +349,27 @@
   - `docker compose run --rm app npm run db:check-types`
   - `openspec validate "design-points-transaction-system"`
   - `git diff --check`
+
+## 2026-06-10 20:50 CST - Action Settlement Service
+
+- Implemented Task 9 from the development plan.
+- Followed TDD:
+  - Added `test/modules/point-service.action-settlement.test.ts` first.
+  - Confirmed it failed because `reserveActionPoints`, `captureReservation`, and `releaseReservation` were not implemented.
+  - Added reserve, capture, and release orchestration to `src/modules/points/point.service.ts`.
+- Action settlement behavior:
+  - Reserve uses a fixed 100-point action cost, creates a `RESERVED` action transaction, moves points from available to held, appends `RESERVE` ledger entry, and writes `points.reserved` outbox event.
+  - Reserve retries return the stored result; same idempotency key with a different action payload is rejected as `IDEMPOTENCY_CONFLICT`.
+  - Capture only transitions `RESERVED` transactions to `CAPTURED`, moves held points out, appends `CAPTURE` ledger entry, and writes `points.captured`.
+  - Release only transitions `RESERVED` transactions to `RELEASED`, refunds held points to available, appends `RELEASE` ledger entry, and writes `points.released`.
+  - Capture/release retries return the stored terminal result without duplicate ledger or outbox writes.
+  - Invalid terminal transitions return `INVALID_TRANSACTION_STATE`; insufficient reserve balance returns `INSUFFICIENT_POINTS`.
+- Added `NotFoundError` and wallet lookup by id with `FOR UPDATE` for settlement paths.
+- Verification completed:
+  - `docker compose run --rm app npm test -- test/modules/point-service.action-settlement.test.ts`
+  - `npm run typecheck`
+  - `npm run build`
+  - `docker compose run --rm app npm test`
+  - `docker compose run --rm app npm run db:check-types`
+  - `openspec validate "design-points-transaction-system"`
+  - `git diff --check`
