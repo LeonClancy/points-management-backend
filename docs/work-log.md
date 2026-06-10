@@ -157,3 +157,11 @@
   - `openspec validate "design-points-transaction-system"`
   - `git diff --check`
 - Docker Compose runtime verification could not run in this environment because the WSL distro does not have the `docker` command available.
+
+## 2026-06-10 17:12 CST - Scaffold Review Fixes
+
+- Addressed code review feedback after the initial scaffold/local setup commit:
+  - Added `tsconfig.test.json` and `npm run typecheck` so test files are typechecked without emitting them into `dist`.
+  - Added `.dockerignore` to keep `.git`, `.env`, `node_modules`, `dist`, local database data, docs, and OpenSpec files out of Docker build context.
+  - Updated the health route test to close the Fastify instance after injection.
+  - Split README local setup into Docker and host Node.js paths so Docker remains a true one-command startup path after copying `.env.example`.

@@ -4,10 +4,19 @@ Backend service for a transactional point management assignment.
 
 ## Local Setup
 
+Docker path:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Host Node.js path:
+
 ```bash
 cp .env.example .env
 npm install
-docker compose up --build
+npm run dev
 ```
 
 Health check:

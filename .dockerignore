@@ -1,0 +1,14 @@
+.git
+.env
+.env.*
+!.env.example
+node_modules
+dist
+coverage
+tmp
+postgres-data
+docs
+openspec
+.codex
+.DS_Store
+npm-debug.log*

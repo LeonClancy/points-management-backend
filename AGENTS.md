@@ -44,6 +44,9 @@ Validate it with:
 ```bash
 openspec validate "design-points-transaction-system"
 openspec status --change "design-points-transaction-system"
+npm run typecheck
+npm test
+npm run build
 ```
 
 ## Design Direction
