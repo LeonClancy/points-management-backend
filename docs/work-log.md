@@ -399,3 +399,31 @@
   - `docker compose run --rm app npm run db:check-types`
   - `openspec validate "design-points-transaction-system"`
   - `git diff --check`
+
+## 2026-06-10 21:01 CST - HTTP API and Swagger
+
+- Implemented Task 13 from the development plan.
+- Added Swagger/OpenAPI registration at `/docs`.
+- Split route modules by domain:
+  - `src/modules/health/health.routes.ts`
+  - `src/modules/wallets/wallet.routes.ts`
+  - `src/modules/actions/action.routes.ts`
+- Added TypeBox schemas for request, params, and response validation.
+- Updated `buildApp` to accept an injected Kysely DB for tests or create one from `databaseUrl` for production.
+- Updated `server.ts` to pass `DATABASE_URL` into `buildApp`.
+- HTTP routes now expose:
+  - `GET /health`
+  - `POST /wallets/recharge`
+  - `GET /wallets/:user_id`
+  - `POST /actions/reserve`
+  - `POST /actions/:transaction_id/capture`
+  - `POST /actions/:transaction_id/release`
+  - `/docs`
+- Verification completed:
+  - `docker compose run --rm app npm test -- test/http/routes.test.ts`
+  - `npm run typecheck`
+  - `npm run build`
+  - `docker compose run --rm app npm test`
+  - `docker compose run --rm app npm run db:check-types`
+  - `openspec validate "design-points-transaction-system"`
+  - `git diff --check`
