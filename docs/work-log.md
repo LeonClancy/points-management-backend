@@ -284,3 +284,25 @@
   - `npm run build`
   - `docker compose run --rm app npm test`
   - `openspec validate "design-points-transaction-system"`
+
+## 2026-06-10 19:44 CST - Point Accounting Repositories
+
+- Implemented Task 6 from the development plan.
+- Followed TDD:
+  - Added `test/modules/repositories.test.ts` first.
+  - Confirmed it failed because the repository modules did not exist.
+  - Added wallet, point transaction, ledger, and outbox repositories.
+- Repository scope:
+  - Wallet creation, row locking by `user_id`, and database-side balance arithmetic.
+  - Point transaction create, idempotency lookup with row lock, lookup by id with row lock, and status/response update.
+  - Append-only ledger entry creation; no ledger update/delete helper is exported.
+  - Outbox event append with database defaults for `PENDING` status and zero attempts.
+- Docker-backed tests verify wallet row locks with PostgreSQL `lock_timeout`, negative-balance check constraints, ledger append-only exports, and outbox defaults.
+- Verification completed:
+  - `docker compose run --rm app npm test -- test/modules/repositories.test.ts`
+  - `npm run typecheck`
+  - `npm test`
+  - `npm run build`
+  - `docker compose run --rm app npm test`
+  - `docker compose run --rm app npm run db:check-types`
+  - `openspec validate "design-points-transaction-system"`
