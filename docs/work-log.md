@@ -1,0 +1,64 @@
+# Work Log
+
+## 2026-06-10 16:05 CST - Assignment Intake
+
+- Received the assignment in `docs/context.md`.
+- Reviewed the prompt and identified the required deliverable as a Markdown architecture document for a transactional point system.
+- Initial interpretation: the assignment is primarily about backend accounting correctness, transaction boundaries, nested transactions, consistency, and production readiness rather than CRUD implementation.
+
+## 2026-06-10 16:08 CST - Design Direction
+
+- Used AI agent discussion to compare possible approaches for action point deduction.
+- Selected a reservation-based model as the strongest direction:
+  - Reserve 100 points when an action starts.
+  - Capture the reservation when the action succeeds.
+  - Release the reservation when the action fails, is cancelled, or expires.
+- Chose PostgreSQL as the recommended database because it provides ACID transactions, row-level locks, constraints, and `SAVEPOINT` support for nested transaction handling.
+- Decided to pair wallet balance projections with append-only ledger entries so the system supports both efficient reads and audit/reconciliation.
+
+## 2026-06-10 16:10 CST - OpenSpec Setup
+
+- Used OpenSpec to structure the requirement analysis.
+- Created change: `design-points-transaction-system`.
+- Generated the proposal artifact at `openspec/changes/design-points-transaction-system/proposal.md`.
+- Split the design into three capabilities:
+  - `point-wallet-ledger`
+  - `point-action-settlement`
+  - `transaction-consistency`
+
+## 2026-06-10 16:12 CST - OpenSpec Design and Specs
+
+- Generated `design.md` for the proposed architecture.
+- Defined the key decisions:
+  - PostgreSQL as the primary source of truth.
+  - Reserve/capture/release lifecycle for fixed 100-point actions.
+  - Append-only ledger plus wallet balance projection.
+  - Idempotency keys for retry safety.
+  - Database-level nested transactions via savepoints.
+  - Business-level nested transactions via parent-child transaction records.
+  - Outbox events for post-commit side effects.
+- Generated three OpenSpec spec files with testable requirements and scenarios:
+  - `specs/point-wallet-ledger/spec.md`
+  - `specs/point-action-settlement/spec.md`
+  - `specs/transaction-consistency/spec.md`
+
+## 2026-06-10 16:14 CST - Task Breakdown and Validation
+
+- Generated `tasks.md` as the checklist for producing the final architecture document and Private Gist deliverable.
+- Included tasks for:
+  - Final Markdown architecture document.
+  - Transaction flow design.
+  - Consistency and nested transaction explanation.
+  - Production readiness.
+  - Verification and delivery.
+- Ran OpenSpec verification:
+  - `openspec status --change "design-points-transaction-system"`
+  - `openspec validate "design-points-transaction-system"`
+- Result: all 4 OpenSpec artifacts were complete and the change was valid.
+
+## 2026-06-10 16:16 CST - Manual Judgment Notes
+
+- The final answer should avoid presenting a long-running database transaction around the whole action execution. That would be fragile and unrealistic.
+- The final design should explicitly distinguish database nested transactions from business nested transactions.
+- The final document should emphasize invariants, idempotency, state transitions, and recovery jobs because these are the strongest backend engineering signals for this assignment.
+- Before creating the Private Gist, the final Markdown document should be reviewed against every required section listed in `docs/context.md`.
