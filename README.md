@@ -30,6 +30,10 @@ The implemented stack is Fastify + PostgreSQL + Kysely + Swagger/OpenAPI.
 
 - [docs/verification.zh-TW.md](docs/verification.zh-TW.md)
 
+Gist 交付用摘要請見：
+
+- [docs/gist-delivery.zh-TW.md](docs/gist-delivery.zh-TW.md)
+
 建議至少跑過：
 
 ```bash
