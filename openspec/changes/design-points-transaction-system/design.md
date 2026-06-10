@@ -13,6 +13,7 @@ The key accounting problem is that an action is not completed at the moment it s
 - Make recharge, reserve, capture, and release operations idempotent.
 - Define nested transaction semantics at both database and business levels.
 - Define operational controls needed before production launch.
+- Define local setup and handoff requirements so future implementation work can be started quickly.
 - Produce requirements and tasks that can become the final Markdown architecture answer for the assignment.
 
 **Non-Goals:**
@@ -74,6 +75,12 @@ This distinction is important because database nested transactions are short-liv
 
 Any event that must be published after a point movement, such as `points.reserved` or `points.captured`, is written to `outbox_events` in the same database transaction. A worker publishes events after commit. This prevents publishing an event for a transaction that later rolls back.
 
+### Treat setup and AI handoff as non-functional requirements
+
+The repository should remain easy to operate as it evolves from design-only to implementation. Because there is no runnable backend service yet, the immediate requirement is to document the current state in `AGENTS.md` and keep OpenSpec artifacts discoverable. When implementation starts, the project should add a real `docker-compose.yml` that starts the application and PostgreSQL with one command, such as `docker compose up --build`.
+
+The compose setup should not be a placeholder. It should include the actual application service, database service, environment variables, migrations or setup commands, and health checks once those components exist. Until then, `AGENTS.md` is the correct handoff mechanism for a new AI agent or engineer.
+
 ## Risks / Trade-offs
 
 - Reservation rows can become stale if a worker crashes during action execution -> Add an expiration timestamp and a recovery job that releases expired reservations.
@@ -81,6 +88,7 @@ Any event that must be published after a point movement, such as `points.reserve
 - Row-level locking can limit throughput for a single hot wallet -> Accept this for correctness first, then consider sharded wallets or queued per-wallet processing if product load requires it.
 - Idempotency keys can be mis-scoped -> Scope uniqueness by operation type and external request identifier, and store the original response payload for deterministic retry responses.
 - Business nested transactions can be confused with database savepoints -> Document both explicitly and keep APIs named around business intent, such as `reserveActionPoints`, `captureReservation`, and `releaseReservation`.
+- Setup documentation can drift from the implementation -> Treat `AGENTS.md`, Docker Compose, and setup instructions as required updates whenever runtime dependencies or commands change.
 
 ## Migration Plan
 
@@ -93,3 +101,4 @@ Rollback strategy for a real deployment would be to stop new point mutations, re
 - Should an action reservation expire after a fixed interval, or should the action service explicitly heartbeat long-running work?
 - Should recharge be considered final only after a payment provider settlement event, or is the assignment limited to internal recharge records?
 - What audit retention and privacy requirements apply to wallet and transaction history?
+- Which backend framework will be used when the design moves from architecture document to runnable implementation?

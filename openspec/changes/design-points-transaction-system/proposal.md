@@ -10,6 +10,7 @@ The assignment asks for a backend design for a point system that can safely hand
 - Define idempotent transaction APIs to make client retries and worker retries safe.
 - Define nested transaction behavior using database savepoints plus business-level parent-child transaction records.
 - Define consistency, error handling, reconciliation, and production readiness requirements for a formal backend design document.
+- Define project operability requirements so the implementation is easy to bootstrap locally and easy for a new AI agent or engineer to understand.
 
 ## Capabilities
 
@@ -18,6 +19,7 @@ The assignment asks for a backend design for a point system that can safely hand
 - `point-wallet-ledger`: Wallet balance storage, recharge behavior, immutable ledger entries, and balance reconciliation.
 - `point-action-settlement`: Reservation, capture, and release flows for actions that cost a fixed 100 points.
 - `transaction-consistency`: Transaction boundaries, nested transaction behavior, concurrency control, idempotency, and recovery rules.
+- `project-operability`: Local setup, Docker Compose expectations, and AI/engineer handoff documentation.
 
 ### Modified Capabilities
 
@@ -29,3 +31,4 @@ None.
 - Database selection and schema design, with PostgreSQL as the recommended primary database.
 - Transaction manager behavior, including `SELECT ... FOR UPDATE`, unique idempotency keys, valid state transitions, and `SAVEPOINT` support.
 - Operational design for retries, stale reservation recovery, reconciliation, monitoring, auditability, and future scaling.
+- Developer experience requirements for one-command local setup and repository handoff documentation.

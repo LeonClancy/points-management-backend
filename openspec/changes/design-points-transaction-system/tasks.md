@@ -37,3 +37,11 @@
 - [ ] 5.3 Validate the OpenSpec change with `openspec validate`.
 - [ ] 5.4 Review the final Markdown document against the assignment checklist.
 - [ ] 5.5 Create the Private Gist with the final Markdown files and preserve revision history for updates.
+
+## 6. Operability and Handoff
+
+- [ ] 6.1 Maintain `AGENTS.md` with project purpose, current state, key files, and verification commands.
+- [ ] 6.2 Include local setup expectations in the final architecture document.
+- [ ] 6.3 When runnable backend code exists, add `docker-compose.yml` for one-command app and PostgreSQL startup.
+- [ ] 6.4 When Docker Compose is added, include environment defaults, migration/setup commands, and health checks.
+- [ ] 6.5 Keep setup documentation and AI handoff notes updated whenever runtime dependencies or commands change.

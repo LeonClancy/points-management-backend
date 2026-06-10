@@ -62,3 +62,10 @@
 - The final design should explicitly distinguish database nested transactions from business nested transactions.
 - The final document should emphasize invariants, idempotency, state transitions, and recovery jobs because these are the strongest backend engineering signals for this assignment.
 - Before creating the Private Gist, the final Markdown document should be reviewed against every required section listed in `docs/context.md`.
+
+## 2026-06-10 16:25 CST - Operability Requirement
+
+- Added a non-functional requirement for project operability and handoff.
+- Decided not to add a placeholder `docker-compose.yml` while the repository has no runnable backend service.
+- Added `AGENTS.md` so a future AI agent or engineer can immediately understand the project state, current OpenSpec change, validation commands, and design direction.
+- Added OpenSpec capability `project-operability` to track Docker Compose expectations and AI/engineer handoff documentation as explicit requirements.
