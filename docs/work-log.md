@@ -233,3 +233,20 @@
   - Updated the bootstrap `src/db/generated.ts` type aliases to align with PostgreSQL enum codegen naming.
   - Updated the implementation plan to document the temporary Docker-deferred generated type exception and the actual DB scaffold test file name.
 - Added scaffold tests that catch enum/typegen drift and missing planned workflow indexes without requiring local PostgreSQL access.
+
+## 2026-06-10 18:52 CST - Docker Database Verification Completed
+
+- Re-ran the previously deferred Docker verification after Docker Desktop WSL integration became available.
+- Fixed Docker build reproducibility by refreshing `package-lock.json` with Node 22/npm 10 in Docker:
+  - Docker `npm ci` required optional peer entries for `@emnapi/core` and `@emnapi/runtime`.
+  - The lockfile is now compatible with the Node 22 image used by `Dockerfile`.
+- Verified Docker-based database workflow:
+  - `docker compose up -d db`
+  - `docker compose run --rm app npm run db:migrate`
+  - `docker compose run --rm app npm run db:generate-types`
+  - `docker compose run --rm app npm run db:check-types`
+- `src/db/generated.ts` is now the actual `kysely-codegen` output from the live PostgreSQL schema instead of a temporary bootstrap file.
+- Verified local operability:
+  - `docker compose build --no-cache app` repaired a stale Docker snapshot cache issue.
+  - `docker compose up -d --build`
+  - `curl -sS http://127.0.0.1:3000/health` returned `{"status":"ok"}` from the published app port.
